@@ -10,4 +10,3 @@ namespace robot_controller_api.Models
         public DateTime ModifiedDate { get; set; }
     }
 }
-
