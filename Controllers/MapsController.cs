@@ -8,16 +8,26 @@ namespace robot_controller_api.Controllers
     [Route("api/maps")]
     public class MapsController : ControllerBase
     {
+        // CHANGE: Uses interface instead of static class
+        // The actual implementation is injected from outside (Program.cs)
+        private readonly IMapDataAccess _mapsRepo;
+
+        // DEPENDENCY INJECTION: ASP.NET gives us the correct implementation automatically
+        public MapsController(IMapDataAccess mapsRepo)
+        {
+            _mapsRepo = mapsRepo;
+        }
+
         [HttpGet]
         public ActionResult<List<Map>> GetAll()
         {
-            return Ok(MapDataAccess.GetMaps());
+            return Ok(_mapsRepo.GetMaps());
         }
 
         [HttpGet("{id}")]
         public ActionResult<Map> GetById(int id)
         {
-            var map = MapDataAccess.GetMapById(id);
+            var map = _mapsRepo.GetMapById(id);
             if (map == null)
                 return NotFound();
             return Ok(map);
@@ -31,7 +41,7 @@ namespace robot_controller_api.Controllers
 
             newMap.CreatedDate = DateTime.Now;
             newMap.ModifiedDate = DateTime.Now;
-            MapDataAccess.AddMap(newMap);
+            _mapsRepo.AddMap(newMap);
             return CreatedAtAction(nameof(GetById), new { id = newMap.Id }, newMap);
         }
 
@@ -42,7 +52,7 @@ namespace robot_controller_api.Controllers
                 return BadRequest("Rows and columns must be between 2 and 100.");
 
             updatedMap.ModifiedDate = DateTime.Now;
-            bool updated = MapDataAccess.UpdateMap(id, updatedMap);
+            bool updated = _mapsRepo.UpdateMap(id, updatedMap);
             if (!updated)
                 return NotFound();
             return NoContent();
@@ -51,7 +61,7 @@ namespace robot_controller_api.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            bool deleted = MapDataAccess.DeleteMap(id);
+            bool deleted = _mapsRepo.DeleteMap(id);
             if (!deleted)
                 return NotFound();
             return NoContent();
@@ -60,7 +70,7 @@ namespace robot_controller_api.Controllers
         [HttpGet("{id}/check-coordinate/{row}/{column}")]
         public ActionResult<bool> CheckCoordinate(int id, int row, int column)
         {
-            var map = MapDataAccess.GetMapById(id);
+            var map = _mapsRepo.GetMapById(id);
             if (map == null)
                 return NotFound();
 
