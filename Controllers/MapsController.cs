@@ -8,11 +8,8 @@ namespace robot_controller_api.Controllers
     [Route("api/maps")]
     public class MapsController : ControllerBase
     {
-        // CHANGE: Uses interface instead of static class
-        // The actual implementation is injected from outside (Program.cs)
         private readonly IMapDataAccess _mapsRepo;
 
-        // DEPENDENCY INJECTION: ASP.NET gives us the correct implementation automatically
         public MapsController(IMapDataAccess mapsRepo)
         {
             _mapsRepo = mapsRepo;
