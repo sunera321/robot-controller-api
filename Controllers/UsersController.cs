@@ -27,6 +27,18 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 
+    // GET /users/admin
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("admin")]
+    public IActionResult GetAdminUsers()
+    {
+        var users = _userDataAccess.GetUsers()
+            .Where(u => u.Role == "Admin")
+            .ToList();
+
+        return Ok(users);
+    }
+
     // GET /users/{id}
     [Authorize(Policy = "UserOnly")]
     [HttpGet("{id}")]
@@ -42,24 +54,30 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
-    // POST /users
+    // POST /users - Register new user
     [AllowAnonymous]
     [HttpPost]
-    public IActionResult AddUser(UserModel user, [FromQuery] string password)
+    public IActionResult AddUser(LoginModel loginModel)
     {
-        var hasher = new PasswordHasher<UserModel>();
+        var user = new UserModel
+        {
+            Email = loginModel.Email,
+            FirstName = "User",
+            LastName = "Account",
+            Role = "User"
+        };
 
-        user.PasswordHash =
-            hasher.HashPassword(user, password);
+        var hasher = new PasswordHasher<UserModel>();
+        user.PasswordHash = hasher.HashPassword(user, loginModel.Password);
 
         user.CreatedDate = DateTime.Now;
         user.ModifiedDate = DateTime.Now;
 
         int newId = _userDataAccess.AddUser(user);
-
         user.Id = newId;
 
-        return Ok(user);
+        // Return only safe data (don't expose PasswordHash)
+        return Ok(new { user.Id, user.Email, message = "User created successfully" });
     }
 
     // PUT /users/{id}
@@ -103,5 +121,27 @@ public class UsersController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    // PATCH /users/{id} - Update email and password
+    [Authorize(Policy = "UserOnly")]
+    [HttpPatch("{id}")]
+    public IActionResult UpdateUserPassword(int id, LoginModel loginModel)
+    {
+        var existingUser = _userDataAccess.GetUserById(id);
+
+        if (existingUser == null)
+        {
+            return NotFound();
+        }
+
+        var hasher = new PasswordHasher<UserModel>();
+        existingUser.Email = loginModel.Email;
+        existingUser.PasswordHash = hasher.HashPassword(existingUser, loginModel.Password);
+        existingUser.ModifiedDate = DateTime.Now;
+
+        bool updated = _userDataAccess.UpdateUser(existingUser);
+
+        return updated ? NoContent() : BadRequest();
     }
 }
