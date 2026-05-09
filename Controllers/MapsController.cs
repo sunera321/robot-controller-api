@@ -1,19 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using robot_controller_api.Models;
 using robot_controller_api.Persistence;
-
+using Microsoft.AspNetCore.Authorization;
 namespace robot_controller_api.Controllers
 {
     [ApiController]
     [Route("api/maps")]
     public class MapsController : ControllerBase
-    {
+    {   
+        [Authorize(Policy = "UserOnly")]
         [HttpGet]
         public ActionResult<List<Map>> GetAll()
         {
             return Ok(MapDataAccess.GetMaps());
         }
 
+        [Authorize(Policy = "UserOnly")]
         [HttpGet("{id}")]
         public ActionResult<Map> GetById(int id)
         {
@@ -22,7 +24,8 @@ namespace robot_controller_api.Controllers
                 return NotFound();
             return Ok(map);
         }
-
+        
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost]
         public ActionResult<Map> Create(Map newMap)
         {
@@ -34,7 +37,7 @@ namespace robot_controller_api.Controllers
             MapDataAccess.AddMap(newMap);
             return CreatedAtAction(nameof(GetById), new { id = newMap.Id }, newMap);
         }
-
+        [Authorize(Policy = "AdminOnly")]
         [HttpPut("{id}")]
         public IActionResult Update(int id, Map updatedMap)
         {
@@ -47,7 +50,7 @@ namespace robot_controller_api.Controllers
                 return NotFound();
             return NoContent();
         }
-
+        [Authorize(Policy = "AdminOnly")]   
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
@@ -57,6 +60,7 @@ namespace robot_controller_api.Controllers
             return NoContent();
         }
 
+        [Authorize(Policy = "UserOnly")]
         [HttpGet("{id}/check-coordinate/{row}/{column}")]
         public ActionResult<bool> CheckCoordinate(int id, int row, int column)
         {
