@@ -66,7 +66,7 @@ public class UsersController : ControllerBase
             LastName = "Account",
             Role = "User"
         };
-
+        //admin cant be created through this endpoint, only through database or other means, to ensure security
         var hasher = new PasswordHasher<UserModel>();
         user.PasswordHash = hasher.HashPassword(user, loginModel.Password);
 
@@ -76,7 +76,7 @@ public class UsersController : ControllerBase
         int newId = _userDataAccess.AddUser(user);
         user.Id = newId;
 
-        // Return only safe data (don't expose PasswordHash)
+        
         return Ok(new { user.Id, user.Email, message = "User created successfully" });
     }
 
