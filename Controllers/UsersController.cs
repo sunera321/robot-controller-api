@@ -63,7 +63,7 @@ public class UsersController : ControllerBase
         {
             Email = loginModel.Email,
             FirstName = "User",
-            LastName = "Account",
+            LastName ="Account",
             Role = "User"
         };
         //admin cant be created through this endpoint, only through database or other means, to ensure security
@@ -140,7 +140,7 @@ public class UsersController : ControllerBase
         existingUser.PasswordHash = hasher.HashPassword(existingUser, loginModel.Password);
         existingUser.ModifiedDate = DateTime.Now;
 
-        bool updated = _userDataAccess.UpdateUser(existingUser);
+        bool updated = _userDataAccess.UpdateUserCredentials(existingUser);
 
         return updated ? NoContent() : BadRequest();
     }
